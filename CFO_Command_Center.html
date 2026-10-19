@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d1117">
+<title>CFO Command Center</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        background-color: #0d1117;
+        color: white;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        padding: 10px 12px;
+        gap: 8px;
+    }
+    /* Top Navigation Tabs */
+    .tab-bar {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        flex-shrink: 0;
+        height: 40px;
+    }
+    .tab-btn {
+        background-color: #161b22;
+        border: 1px solid #30363d;
+        color: #8b949e;
+        font-size: 13.5px;
+        font-weight: bold;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: 0.15s;
+    }
+    .tab-btn.active {
+        background: linear-gradient(90deg, #1f618d, #2574a9);
+        color: white;
+        border-color: #58a6ff;
+        box-shadow: 0 0 8px rgba(88, 166, 255, 0.3);
+    }
+    /* Dynamic Input Bar */
+    .control-bar {
+        display: flex;
+        gap: 8px;
+        background-color: #161b22;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #30363d;
+        flex-shrink: 0;
+        height: 44px;
+        align-items: center;
+    }
+    .input-group {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+    }
+    .input-group label {
+        font-size: 12px;
+        font-weight: bold;
+        color: #c9d1d9;
+        white-space: nowrap;
+    }
+    .input-group input {
+        width: 100%;
+        background-color: #0d1117;
+        border: 1px solid #30363d;
+        color: #58a6ff;
+        font-size: 13.5px;
+        font-weight: bold;
+        padding: 5px 8px;
+        border-radius: 4px;
+        outline: none;
+        text-align: right;
+    }
+    .input-group input:focus { border-color: #00BFFF; }
+
+    /* Banner */
+    .banner {
+        background: linear-gradient(90deg, #1f618d, #161b22);
+        padding: 8px 16px;
+        border-radius: 6px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 38px;
+        flex-shrink: 0;
+    }
+    /* Main 2-Column Grid */
+    .main-grid {
+        display: flex;
+        gap: 14px;
+        flex: 1;
+        min-height: 0;
+    }
+    .table-container {
+        flex: 2.15;
+        background-color: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        height: 100%;
+        overflow-y: auto;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; color: #c9d1d9; }
+    thead { position: sticky; top: 0; background-color: #1f618d; color: white; z-index: 1; }
+    th { padding: 9px 10px; text-align: right; border-bottom: 2px solid #30363d; }
+    th:first-child { text-align: center; }
+    td { padding: 7px 10px; text-align: right; border-bottom: 1px solid #30363d; }
+    td:first-child { text-align: center; color: #58a6ff; font-weight: bold; }
+
+    /* Right KPI Cards */
+    .kpi-col { flex: 1; display: flex; flex-direction: column; gap: 12px; height: 100%; }
+    .kpi-card {
+        background-color: #161b22; border: 1px solid #30363d; border-radius: 6px;
+        padding: 12px 16px; display: flex; flex-direction: column; justify-content: center;
+    }
+    .kpi-title { font-size: 11px; color: #8b949e; text-transform: uppercase; font-weight: bold; }
+    .kpi-big { font-size: 30px; font-weight: bold; margin: 4px 0 10px 0; }
+    .kpi-row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 5px 0; border-top: 1px solid #21262d; color: #c9d1d9; }
+    .kpi-row span { color: #8b949e; }
+    .kpi-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid #30363d; padding-bottom: 5px; font-size: 12px; font-weight: bold; }
+    .badge { font-size: 9.5px; font-weight: bold; padding: 3px 6px; border-radius: 4px; background-color: #21262d; }
+    .bar-wrap { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background-color: #21262d; margin-top: 6px; }
+    .bar-labels { display: flex; justify-content: space-between; font-size: 10.5px; color: #8b949e; margin-top: 4px; margin-bottom: 6px; }
+    .callout-box { background-color: #1f2937; border: 1px solid #3b82f6; border-radius: 6px; padding: 8px; text-align: center; }
+    .callout-lbl { font-size: 11px; color: #93c5fd; font-weight: bold; }
+    .callout-val { font-size: 22px; font-weight: bold; color: white; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab(0)">📈 1. Stock DCF Engine</button>
+        <button class="tab-btn" onclick="switchTab(1)">🏦 2. Loan & EMI Engine</button>
+        <button class="tab-btn" onclick="switchTab(2)">🏭 3. NPV & IRR Engine</button>
+        <button class="tab-btn" onclick="switchTab(3)">📊 4. Break-Even (CVP)</button>
+    </div>
+
+    <div class="control-bar" id="controlBar"></div>
+
+    <div class="banner">
+        <span id="bannerTitle" style="font-size: 16px; font-weight: bold; letter-spacing: 0.5px;"></span>
+        <span id="bannerSub" style="font-size: 12.5px; color: #c9d1d9; font-weight: 500;"></span>
+    </div>
+
+    <div class="main-grid">
+        <div class="table-container">
+            <table>
+                <thead id="tableHead"></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+        <div class="kpi-col" id="kpiCol"></div>
+    </div>
+
+<script>
+const configs = [
+    {
+        labels: ["FCF (Cr):", "Shares (Cr):", "Growth %:", "WACC %:", "NSE Price ₹:", "Safety %:"],
+        values: [48500, 361.8, 10, 11, 2305, 15],
+        steps:  [500, 10, 1, 0.5, 25, 5]
+    },
+    {
+        labels: ["Loan Amt ₹:", "Interest %:", "Tenure (Yrs):", "Max Budget ₹:"],
+        values: [2500000, 8.7, 5, 51533],
+        steps:  [50000, 0.1, 1, 1000]
+    },
+    {
+        labels: ["Capex (Cr):", "Yr 1 Cash (Cr):", "CF Growth %:", "WACC %:", "Life (Yrs):"],
+        values: [500, 130, 10, 12, 7],
+        steps:  [25, 10, 1, 0.5, 1]
+    },
+    {
+        labels: ["Price/Unit ₹:", "Var Cost ₹:", "Fixed (Lakh):", "Target (Lakh):", "Curr Units:"],
+        values: [1500, 900, 120, 60, 25000],
+        steps:  [50, 50, 10, 10, 1000]
+    }
+];
+
+let currentTab = 0;
+const fmt0 = (n) => Math.round(n).toLocaleString('en-IN');
+const fmt1 = (n) => n.toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1});
+
+function solveIRR(cf) {
+    let low = -0.9, high = 5.0;
+    for (let i = 0; i < 100; i++) {
+        let mid = (low + high) / 2;
+        let npv = 0;
+        for (let t = 0; t < cf.length; t++) npv += cf[t] / Math.pow(1 + mid, t);
+        if (npv > 0) low = mid; else high = mid;
+    }
+    return ((low + high) / 2) * 100;
+}
+
+function switchTab(idx) {
+    currentTab = idx;
+    document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+    const cfg = configs[idx];
+    let html = "";
+    for (let i = 0; i < cfg.labels.length; i++) {
+        html += `<div class="input-group">
+            <label>${cfg.labels[i]}</label>
+            <input type="number" id="inp${i}" value="${cfg.values[i]}" step="${cfg.steps[i]}" oninput="render()">
+        </div>`;
+    }
+    document.getElementById('controlBar').innerHTML = html;
+    render();
+}
+
+function getVal(i) {
+    const el = document.getElementById('inp' + i);
+    return el ? (parseFloat(el.value) || 0) : 0;
+}
+
+function render() {
+    configs[currentTab].values = configs[currentTab].labels.map((_, i) => getVal(i));
+    let headers = [], rows = "", cards = "", bTitle = "", bSub = "";
+
+    if (currentTab === 0) {
+        let fcf = Math.max(1, getVal(0)), sh = Math.max(0.1, getVal(1)), g = getVal(2)/100, r = Math.max(0.05, getVal(3)/100), mkt = Math.max(1, getVal(4)), mos = Math.max(0, getVal(5));
+        let gTerm = Math.min(0.045, Math.max(0.01, r - 0.03)), cumPv = 0, curr = fcf;
+        for (let yr = 1; yr <= 10; yr++) {
+            curr *= (1 + g);
+            let df = Math.pow(1 + r, yr), pv = curr / df;
+            cumPv += pv;
+            let bg = yr % 2 === 1 ? "#161b22" : "#1c2128";
+            rows += `<tr style="background:${bg}"><td>Year ${yr}</td><td>₹ ${fmt1(curr)} Cr</td><td style="color:#8b949e">${(g*100).toFixed(1)}%</td><td style="color:#8b949e">${(1/df).toFixed(3)}x</td><td style="color:#3fb950;font-weight:bold">₹ ${fmt1(pv)} Cr</td><td>₹ ${fmt1(cumPv)} Cr</td></tr>`;
+        }
+        let tv = (curr * (1 + gTerm)) / (r - gTerm), pvTv = tv / Math.pow(1 + r, 10), ev = cumPv + pvTv;
+        let fair = ev / sh, safe = fair * (1 - mos/100), up = ((fair - mkt) / mkt) * 100;
+        let fPct = (cumPv / ev) * 100, tPct = 100 - fPct;
+        rows += `<tr style="background:#1f2937;border-top:2px solid #3b82f6"><td style="color:#93c5fd">Terminal (Y10)</td><td style="color:#93c5fd;font-weight:bold">₹ ${fmt0(tv)} Cr</td><td style="color:#93c5fd">${(gTerm*100).toFixed(1)}%</td><td style="color:#93c5fd">${(1/Math.pow(1+r,10)).toFixed(3)}x</td><td style="color:#00BFFF;font-weight:bold">₹ ${fmt0(pvTv)} Cr</td><td style="color:#00BFFF;font-weight:bold">₹ ${fmt0(ev)} Cr</td></tr>`;
+        let sigTxt = mkt <= safe ? "UNDERVALUED — STRONG BUY" : (mkt <= fair ? "FAIR VALUE — HOLD" : "OVERVALUED — SELL");
+        let sigCol = mkt <= safe ? "#3fb950" : (mkt <= fair ? "#FFB900" : "#ff7b72");
+        bTitle = "MODULE 1: INTRINSIC STOCK VALUATION (DCF) & SIGNAL ENGINE";
+        bSub = `Shares Out: ${fmt1(sh)} Cr | Implied Market Cap: ₹ ${fmt0(mkt*sh)} Cr`;
+        headers = ["Period", "Projected FCF", "Growth", "PV Factor", "Present Value", "Cumulative PV"];
+        cards = `
+        <div class="kpi-card" style="flex:1;border-top:4px solid #00BFFF"><div class="kpi-title">Fair Intrinsic Value / Share</div><div class="kpi-big" style="color:#00BFFF">₹ ${fmt0(fair)}</div><div class="kpi-row"><span>Current Market Price:</span><b>₹ ${fmt0(mkt)}</b></div><div class="kpi-row"><span>Implied Upside / Downside:</span><b style="color:${up>=0?'#3fb950':'#ff7b72'}">${up>=0?'+':''}${up.toFixed(1)}%</b></div></div>
+        <div class="kpi-card" style="flex:1;border-top:4px solid ${sigCol}"><div class="kpi-header"><span>SAFETY & SIGNAL</span><span class="badge" style="color:${sigCol}">${sigTxt}</span></div><div class="kpi-row"><span>Margin of Safety Applied:</span><b>${mos.toFixed(0)}%</b></div><div class="kpi-row"><span>Safe Target Buy Price:</span><b style="font-size:20px;color:${sigCol}">₹ ${fmt0(safe)}</b></div></div>
+        <div class="kpi-card" style="flex:1.25;border-top:4px solid #FFB900;justify-content:space-between"><div><div class="kpi-row"><span>PV of 10-Yr Cash Flows:</span><b style="color:#3fb950">₹ ${fmt0(cumPv)} Cr</b></div><div class="kpi-row"><span>PV of Terminal Value:</span><b style="color:#00BFFF">₹ ${fmt0(pvTv)} Cr</b></div><div class="bar-wrap"><div style="width:${fPct}%;background:#3fb950"></div><div style="width:${tPct}%;background:#00BFFF"></div></div><div class="bar-labels"><span>10-Yr FCF (${Math.round(fPct)}%)</span><span>Terminal (${Math.round(tPct)}%)</span></div></div><div class="callout-box"><div class="callout-lbl">Total Intrinsic Enterprise Value</div><div class="callout-val">₹ ${fmt0(ev)} Cr</div></div></div>`;
+    }
+    else if (currentTab === 1) {
+        let loan = Math.max(1000, getVal(0)), rate = Math.max(0.1, getVal(1)), yrs = Math.max(1, Math.round(getVal(2))), bud = Math.max(500, getVal(3));
+        let r = (rate / 100) / 12, n = yrs * 12;
+        let emi = loan * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+        let maxL = bud * (Math.pow(1 + r, n) - 1) / (r * Math.pow(1 + r, n));
+        let totEmi = emi * n, totInt = totEmi - loan, extra = (totInt / loan) * 100, pPct = (loan / totEmi) * 100, iPct = 100 - pPct;
+        let bal = loan;
+        for (let m = 1; m <= n; m++) {
+            let ip = bal * r, pp = emi - ip, nbal = Math.max(0, bal - pp);
+            let bg = m % 2 === 1 ? "#161b22" : "#1c2128";
+            rows += `<tr style="background:${bg}"><td>${m}</td><td>₹ ${fmt0(bal)}</td><td style="font-weight:bold">₹ ${fmt0(emi)}</td><td style="color:#ff7b72">₹ ${fmt0(ip)}</td><td style="color:#3fb950">₹ ${fmt0(pp)}</td><td>₹ ${fmt0(nbal)}</td></tr>`;
+            bal = nbal;
+        }
+        let sigCol = maxL >= loan ? "#3fb950" : "#ff7b72", sigTxt = maxL >= loan ? "WITHIN BUDGET" : "EXCEEDS BUDGET";
+        bTitle = "MODULE 2: LOAN AMORTIZATION & BUDGET ENGINE";
+        bSub = `Tenure: ${n} Months (${yrs} Years) | Effective Rate: ${rate.toFixed(2)}% p.a.`;
+        headers = ["Month", "Opening Balance", "EMI Payment", "Interest Paid", "Principal Paid", "Closing Balance"];
+        cards = `
+        <div class="kpi-card" style="flex:1;border-top:4px solid #00BFFF"><div class="kpi-title">Calculated Monthly EMI</div><div class="kpi-big" style="color:#00BFFF">₹ ${fmt0(emi)}</div><div class="kpi-row"><span>Loan Principal Amount:</span><b>₹ ${fmt0(loan)}</b></div><div class="kpi-row"><span>Annual Interest Rate:</span><b>${rate.toFixed(2)}%</b></div></div>
+        <div class="kpi-card" style="flex:1;border-top:4px solid ${sigCol}"><div class="kpi-header"><span>BUDGET FUNCTION</span><span class="badge" style="color:${sigCol}">${sigTxt}</span></div><div class="kpi-row"><span>My Max Monthly Budget:</span><b>₹ ${fmt0(bud)}</b></div><div class="kpi-row"><span>Max Loan Allowed:</span><b style="font-size:20px;color:${sigCol}">₹ ${fmt0(maxL)}</b></div></div>
+        <div class="kpi-card" style="flex:1.25;border-top:4px solid #FFB900;justify-content:space-between"><div><div class="kpi-row"><span>Total EMI Outflow:</span><b>₹ ${fmt0(totEmi)}</b></div><div class="kpi-row"><span>Total Interest Payable:</span><b style="color:#ff7b72">₹ ${fmt0(totInt)}</b></div><div class="bar-wrap"><div style="width:${pPct}%;background:#3fb950"></div><div style="width:${iPct}%;background:#ff7b72"></div></div><div class="bar-labels"><span>Principal (${Math.round(pPct)}%)</span><span>Interest (${Math.round(iPct)}%)</span></div></div><div class="callout-box"><div class="callout-lbl">Extra % Payable on Principal</div><div class="callout-val">${Math.round(extra)}%</div></div></div>`;
+    }
+    else if (currentTab === 2) {
+        let capex = Math.max(1, getVal(0)), cf1 = Math.max(1, getVal(1)), g = getVal(2)/100, wacc = Math.max(1, getVal(3)), life = Math.max(2, Math.round(getVal(4)));
+        let r = wacc / 100, cfList = [-capex], cumRaw = -capex, cumPv = -capex, curr = cf1, pb = null;
+        rows += `<tr style="background:#1f2937"><td style="color:#ff7b72">Year 0</td><td style="color:#ff7b72;font-weight:bold">-₹ ${fmt1(capex)} Cr</td><td style="color:#8b949e">1.000x</td><td style="color:#ff7b72;font-weight:bold">-₹ ${fmt1(capex)} Cr</td><td style="color:#ff7b72">-₹ ${fmt1(capex)} Cr</td><td style="color:#ff7b72">-₹ ${fmt1(capex)} Cr</td></tr>`;
+        for (let yr = 1; yr <= life; yr++) {
+            if (yr > 1) curr *= (1 + g);
+            cfList.push(curr);
+            let df = Math.pow(1 + r, yr), pv = curr / df, prev = cumRaw;
+            cumRaw += curr; cumPv += pv;
+            if (prev < 0 && cumRaw >= 0 && pb === null) pb = (yr - 1) + (Math.abs(prev) / curr);
+            let bg = yr % 2 === 1 ? "#161b22" : "#1c2128";
+            rows += `<tr style="background:${bg}"><td>Year ${yr}</td><td>₹ ${fmt1(curr)} Cr</td><td style="color:#8b949e">${(1/df).toFixed(3)}x</td><td style="color:#3fb950;font-weight:bold">₹ ${fmt1(pv)} Cr</td><td>₹ ${fmt1(cumRaw)} Cr</td><td style="font-weight:bold;color:${cumPv>=0?'#3fb950':'#ff7b72'}">₹ ${fmt1(cumPv)} Cr</td></tr>`;
+        }
+        let npv = cumPv, totPvIn = npv + capex, irr = solveIRR(cfList), pi = totPvIn / capex;
+        let sigCol = npv > 0 ? "#3fb950" : "#ff7b72", sigTxt = npv > 0 ? "VIABLE — ACCEPT PROJECT" : "VALUE LOSS — REJECT";
+        let capPct = npv > 0 ? Math.min(100, (capex / totPvIn) * 100) : 100, netPct = Math.max(0, 100 - capPct);
+        bTitle = "MODULE 3: CAPITAL BUDGETING (NPV, IRR & PAYBACK ENGINE)";
+        bSub = `Project Horizon: ${life} Years | Hurdle Rate (WACC): ${wacc.toFixed(1)}%`;
+        headers = ["Period", "Net Cash Flow", "PV Factor", "Discounted CF", "Cum. Raw Cash", "Cum. Net PV (NPV)"];
+        cards = `
+        <div class="kpi-card" style="flex:1;border-top:4px solid #00BFFF"><div class="kpi-title">Net Present Value (NPV)</div><div class="kpi-big" style="color:${sigCol}">${npv>=0?'+':''}₹ ${fmt1(npv)} Cr</div><div class="kpi-row"><span>Total PV of Cash Inflows:</span><b style="color:#3fb950">₹ ${fmt1(totPvIn)} Cr</b></div><div class="kpi-row"><span>Initial Capex Outflow:</span><b style="color:#ff7b72">₹ ${fmt1(capex)} Cr</b></div></div>
+        <div class="kpi-card" style="flex:1;border-top:4px solid ${sigCol}"><div class="kpi-header"><span>IRR & DECISION SIGNAL</span><span class="badge" style="color:${sigCol}">${sigTxt}</span></div><div class="kpi-row"><span>Internal Rate of Return (IRR):</span><b style="font-size:20px;color:${sigCol}">${irr.toFixed(2)}%</b></div><div class="kpi-row"><span>Net Spread vs WACC (${wacc.toFixed(1)}%):</span><b style="color:${sigCol}">${irr-wacc>=0?'+':''}${(irr-wacc).toFixed(2)}%</b></div></div>
+        <div class="kpi-card" style="flex:1.25;border-top:4px solid #FFB900;justify-content:space-between"><div><div class="kpi-row"><span>Exact Payback Period:</span><b style="color:#00BFFF">${pb!==null ? pb.toFixed(2)+' Years' : '> Project Life'}</b></div><div class="kpi-row"><span>Profitability Index (PI):</span><b style="color:#3fb950">${pi.toFixed(2)}x</b></div><div class="bar-wrap"><div style="width:${capPct}%;background:#8b949e"></div><div style="width:${netPct}%;background:#3fb950"></div></div><div class="bar-labels"><span>Capex Recovery (${Math.round(capPct)}%)</span><span>Net Value Added (${Math.round(netPct)}%)</span></div></div><div class="callout-box"><div class="callout-lbl">Total Undiscounted Net Cash</div><div class="callout-val">₹ ${fmt1(cumRaw)} Cr</div></div></div>`;
+    }
+    else {
+        let p = Math.max(1, getVal(0)), vc = Math.max(0, getVal(1)), fcL = Math.max(1, getVal(2)), tpL = Math.max(0, getVal(3)), curU = Math.max(100, getVal(4));
+        let fc = fcL * 100000, tp = tpL * 100000, cm = Math.max(0.01, p - vc), cmR = (cm / p) * 100;
+        let bepU = fc / cm, bepRevL = (bepU * p) / 100000, targU = (fc + tp) / cm, curEbit = (curU * cm) - fc, mos = ((curU - bepU) / curU) * 100;
+        let stepU = Math.max(500, Math.round(bepU / 4));
+        for (let i = 1; i <= 12; i++) {
+            let u = stepU * i, rev = (u * p)/100000, vcost = (u * vc)/100000, ebit = rev - vcost - fcL, mgn = (ebit / rev) * 100;
+            let bg = Math.abs(u - bepU) < (stepU * 0.6) ? "#1f2937" : (i % 2 === 1 ? "#161b22" : "#1c2128");
+            rows += `<tr style="background:${bg}"><td>${fmt0(u)} Units</td><td>₹ ${fmt1(rev)} L</td><td style="color:#ff7b72">₹ ${fmt1(vcost)} L</td><td style="color:#8b949e">₹ ${fmt1(fcL)} L</td><td style="font-weight:bold;color:${ebit>=0?'#3fb950':'#ff7b72'}">₹ ${fmt1(ebit)} L</td><td style="color:${mgn>=0?'#3fb950':'#ff7b72'}">${mgn.toFixed(1)}%</td></tr>`;
+        }
+        let sigCol = curEbit >= 0 ? "#3fb950" : "#ff7b72", sigTxt = curEbit >= 0 ? "PROFITABLE — SAFE ZONE" : "BELOW BREAK-EVEN — LOSS";
+        let vcPct = (vc / p) * 100;
+        bTitle = "MODULE 4: COST-VOLUME-PROFIT (CVP) & BREAK-EVEN ENGINE";
+        bSub = `Contribution Margin: ₹ ${fmt0(cm)}/Unit (${cmR.toFixed(1)}%) | Current Volume: ${fmt0(curU)} Units`;
+        headers = ["Volume Tier", "Gross Revenue", "Variable Cost", "Fixed Cost", "Net Profit (EBIT)", "Operating Margin"];
+        cards = `
+        <div class="kpi-card" style="flex:1;border-top:4px solid #00BFFF"><div class="kpi-title">Break-Even Volume (BEP)</div><div class="kpi-big" style="color:#00BFFF">${fmt0(bepU)} Units</div><div class="kpi-row"><span>Break-Even Revenue:</span><b>₹ ${bepRevL.toFixed(2)} Lakh</b></div><div class="kpi-row"><span>Contribution / Unit (CM%):</span><b style="color:#3fb950">₹ ${fmt0(cm)} (${cmR.toFixed(1)}%)</b></div></div>
+        <div class="kpi-card" style="flex:1;border-top:4px solid ${sigCol}"><div class="kpi-header"><span>OPERATING STATUS</span><span class="badge" style="color:${sigCol}">${sigTxt}</span></div><div class="kpi-row"><span>Net Profit at ${fmt0(curU)} Units:</span><b style="font-size:20px;color:${sigCol}">₹ ${(curEbit/100000).toFixed(2)} Lakh</b></div><div class="kpi-row"><span>Margin of Safety Buffer:</span><b style="color:${sigCol}">${mos.toFixed(1)}%</b></div></div>
+        <div class="kpi-card" style="flex:1.25;border-top:4px solid #FFB900;justify-content:space-between"><div><div class="kpi-row"><span>Target Profit Goal:</span><b>₹ ${fmt1(tpL)} Lakh</b></div><div class="kpi-row"><span>Required Target Sales:</span><b style="color:#00BFFF">₹ ${((targU*p)/100000).toFixed(2)} Lakh</b></div><div class="bar-wrap"><div style="width:${vcPct}%;background:#ff7b72"></div><div style="width:${cmR}%;background:#3fb950"></div></div><div class="bar-labels"><span>Variable Cost (${Math.round(vcPct)}%)</span><span>Contribution (${Math.round(cmR)}%)</span></div></div><div class="callout-box"><div class="callout-lbl">Units Required for Target Profit</div><div class="callout-val">${fmt0(targU)} Units</div></div></div>`;
+    }
+
+    document.getElementById('bannerTitle').innerText = bTitle;
+    document.getElementById('bannerSub').innerText = bSub;
+    document.getElementById('tableHead').innerHTML = `<tr>${headers.map((h, i) => `<th style="text-align:${i===0?'center':'right'}">${h}</th>`).join('')}</tr>`;
+    document.getElementById('tableBody').innerHTML = rows;
+    document.getElementById('kpiCol').innerHTML = cards;
+}
+
+window.onload = () => switchTab(0);
+</script>
+</body>
+</html>
